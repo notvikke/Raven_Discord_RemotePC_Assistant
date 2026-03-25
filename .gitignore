@@ -1,0 +1,7 @@
+bot-env/
+__pycache__/
+.env
+user_config.json
+.DS_Store
+*.pyc
+nul
