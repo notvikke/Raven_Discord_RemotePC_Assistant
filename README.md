@@ -20,30 +20,7 @@ This bot provides a bridge between Discord and high-performance AI command-line 
    ```
 
 ## 🎵 Music Integration (Spotify)
-Ravenn can now control your Spotify playback using the built-in Gemini AI.
-
-### 1. Get Spotify API Keys
-- Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
-- Create a new app and name it "Ravenn Music".
-- In the app settings, set the **Redirect URI** to `http://localhost:3000/callback`.
-- Copy your **Client ID** and **Client Secret** and add them to your `.env` file.
-
-### 2. Perform One-Time Authorization
-Because this uses a browser-based OAuth flow, you need to authorize it once on your machine:
-1. Open your terminal in the project folder.
-2. Run this command:
-   ```bash
-   gemini -p "list my spotify playlists" --allowed-mcp-server-names spotify-music
-   ```
-3. A browser window will open. Log in and click "Authorize".
-4. Once your playlists appear in the terminal, you're all set!
-
-### 3. Use it in Discord!
-Try these commands:
-- `!g play some chill music on Spotify`
-- `!g what song is this?`
-- `!g skip this track`
-- `!g search for [Artist Name] on Spotify`
+> **⚠️ In Development:** Spotify music control features are currently being implemented and tested. This section will be updated with full setup instructions once the feature is stable.
 
 ## 🚀 Running on Startup (Windows)
 ...
