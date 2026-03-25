@@ -3,6 +3,7 @@ import os
 import asyncio
 import json
 import re
+import subprocess
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -54,7 +55,6 @@ def is_safe_path(path):
     path = os.path.abspath(path).lower()
     
     # Check for root drives (e.g., C:\, D:\)
-    # A path is a root if it equals its drive root
     drive = os.path.splitdrive(path)[0]
     if path == drive + os.path.sep or path == drive + "/":
         return False, "You cannot set a root drive as your project path. Please provide a specific subfolder."
@@ -97,29 +97,30 @@ async def run_gemini_native(ctx, prompt, yolo=False):
         return
 
     # Use the user's specific session and directories
-    include_dirs = config.get('allowed_dirs', "")
+    include_dirs = config.get('allowed_dirs', "").strip()
     cwd = config.get('project_path', os.getcwd())
     session_name = f"user_{user_id}"
 
+    # Build the command arguments list
     args = [
         GEMINI_PATH, "-p", prompt,
-        "--output-format", "stream-json",
-        "--include-directories", include_dirs,
-        "--allowed-mcp-server-names", "spotify-music"
+        "--output-format", "stream-json"
     ]
     
-    # Optional: Resume existing session if it exists
-    #args.extend(["-r", session_name]) 
+    if include_dirs:
+        args.extend(["--include-directories", include_dirs])
+        
+    args.extend(["--allowed-mcp-server-names", "spotify-music"])
 
     if yolo:
-        args.append("--approval-mode")
-        args.append("yolo")
+        args.extend(["--approval-mode", "yolo"])
     else:
-        args.append("--approval-mode")
-        args.append("plan")
+        args.extend(["--approval-mode", "plan"])
 
-    cmd_str = ' '.join(f'"{arg}"' if ' ' in arg else arg for arg in args)
+    # Safely join arguments for Windows shell execution
+    cmd_str = subprocess.list2cmdline(args)
 
+    # Start process via shell
     process = await asyncio.create_subprocess_shell(
         cmd_str,
         cwd=cwd,
@@ -131,6 +132,7 @@ async def run_gemini_native(ctx, prompt, yolo=False):
     full_response = ""
     header_info = ""
     status_msg = None
+    debug_log = ""
 
     try:
         async for line in process.stdout:
@@ -152,23 +154,40 @@ async def run_gemini_native(ctx, prompt, yolo=False):
                             status_msg = await ctx.send(msg_text)
                         else:
                             await status_msg.edit(content=msg_text)
+                else:
+                    if not line_text.startswith('Loaded'):
+                        debug_log += line_text + "\n"
             except json.JSONDecodeError:
+                debug_log += line.decode(errors='replace')
                 continue
 
+        stderr_output = (await process.stderr.read()).decode(errors='replace').strip()
         await process.wait()
+        
         if status_msg:
             try: await status_msg.delete()
             except: pass
 
         full_response = clean_ansi(full_response).strip()
-        final_output = f"{header_info}\n{full_response}" if header_info else full_response
-        if not final_output.strip(): final_output = "Gemini returned no response content."
+        
+        if not full_response:
+            if stderr_output:
+                final_output = f"❌ **CLI Error:**\n```\n{stderr_output}\n```"
+            elif debug_log:
+                final_output = f"⚠️ **Debug Log (No response content):**\n```\n{debug_log[:1500]}\n```"
+            else:
+                final_output = "❌ Gemini returned no response content."
+        else:
+            final_output = f"{header_info}\n{full_response}" if header_info else full_response
 
         if len(final_output) > 1900:
             chunks = [final_output[i:i+1900] for i in range(0, len(final_output), 1900)]
             for chunk in chunks: await ctx.send(f"```\n{chunk}\n```")
         else:
-            await ctx.send(f"```\n{final_output}\n```")
+            if final_output.startswith(('❌', '⚠️', '👤')):
+                await ctx.send(final_output)
+            else:
+                await ctx.send(f"```\n{final_output}\n```")
     except Exception as e:
         await ctx.send(f"Error running Gemini CLI: {e}")
 
@@ -178,8 +197,8 @@ async def help_command(ctx):
     embed = discord.Embed(
         title="Ravenn Bot Help",
         description=(
-            "Ravenn is a bridge between Discord and high-performance CLI agents (Gemini and Claude). "
-            "It allows you to manage local files, write code, and run shell commands directly from Discord."
+            "Ravenn is a bridge between Discord and high-performance AI command-line interfaces (CLIs), "
+            "it allows you to manage local files, write code, and run shell commands directly from Discord."
         ),
         color=discord.Color.blue()
     )
@@ -193,7 +212,7 @@ async def help_command(ctx):
     embed.add_field(
         name="🤖 AI Commands",
         value=(
-            "`!g [prompt]`: Ask Gemini a question (Read-only/Plan mode).\n"
+            "**Just type a message**: Gemini handles plain text as a read-only prompt.\n"
             "`!gf [prompt]`: Full Gemini access (YOLO mode - can edit files/run commands).\n"
             "`!c [prompt]`: Interact with Claude Code CLI.\n"
             "`!upload`: Send one or more files with this command to save them to your project."
@@ -267,7 +286,6 @@ async def upload_command(ctx):
     saved_files = []
 
     for attachment in ctx.message.attachments:
-        # Sanitize filename (basic check)
         filename = re.sub(r'[^\w\.-]', '_', attachment.filename)
         save_path = os.path.join(project_path, filename)
         
@@ -284,22 +302,32 @@ async def upload_command(ctx):
 
 @bot.event
 async def on_message(message):
-    # Don't respond to ourselves
     if message.author == bot.user:
         return
 
-    # Check if a new user (not setup) is trying to use a command
-    if message.content.startswith(('!', '>')):
-        user_id = str(message.author.id)
-        configs = load_user_configs()
-        
-        # If it's not setup and they aren't running !setup or !help, remind them
-        command = message.content[1:].split()[0].lower()
-        if user_id not in configs and command not in ['setup', 'help']:
-            await message.channel.send(f"👋 Hi {message.author.mention}! It looks like you haven't set up your project yet. Run `!setup` to get started, or `!help` to see what I can do.")
-            # We don't return here so the command can still fail gracefully in its own handler if needed
+    # Check if the message starts with any of our command prefixes
+    prefixes = ('!', '>')
+    is_command_prefix = message.content.startswith(prefixes)
+    
+    user_id = str(message.author.id)
+    configs = load_user_configs()
+    is_setup = user_id in configs
 
-    await bot.process_commands(message)
+    if is_command_prefix:
+        # It's a prefixed command
+        command_name = message.content[1:].split()[0].lower()
+        if not is_setup and command_name not in ['setup', 'help']:
+            await message.channel.send(f"👋 Hi {message.author.mention}! It looks like you haven't set up your project yet. Run `!setup` to get started, or `!help` to see what I can do.")
+        await bot.process_commands(message)
+    else:
+        # It's a plain message - treat as Gemini prompt if user is setup
+        if is_setup:
+            ctx = await bot.get_context(message)
+            async with ctx.channel.typing():
+                await run_gemini_native(ctx, message.content, yolo=False)
+        else:
+            # For non-setup users, we don't respond to plain messages to avoid spam
+            pass
 
 @bot.event
 async def on_ready():
@@ -335,7 +363,6 @@ async def setup_command(ctx):
         msg = await bot.wait_for('message', check=check, timeout=60)
         allowed_dirs = "" if msg.content.lower() == 'none' else msg.content.strip('`').strip()
 
-        # Save configuration
         user_config = {
             "nickname": nickname,
             "project_path": project_path,
@@ -360,7 +387,6 @@ async def setdirs_command(ctx, *, dirs):
 
     allowed_dirs = "" if dirs.lower() == 'none' else dirs.strip('`').strip()
     
-    # Validate each directory in allowed_dirs
     if allowed_dirs:
         for d in allowed_dirs.split(','):
             d = d.strip()
@@ -387,7 +413,6 @@ async def claude_command(ctx, *, prompt):
             if FULL_ACCESS:
                 cmd.extend(["--dangerously-skip-permissions", "--add-dir", "C:\\", "D:\\"])
 
-            # Use shell for Windows compatibility
             cmd_str = ' '.join(f'"{arg}"' if ' ' in arg else arg for arg in cmd)
             process = await asyncio.create_subprocess_shell(
                 cmd_str,

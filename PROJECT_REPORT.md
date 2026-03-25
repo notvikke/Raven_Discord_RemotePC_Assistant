@@ -8,10 +8,11 @@ This report provides a comprehensive overview of the Ravenn Discord Bot, its arc
 Ravenn is a **bridge application** that connects the Discord interface to high-performance AI command-line interfaces (CLIs), specifically **Gemini CLI** and **Claude Code**.
 
 - **Autonomous Assistance:** It allows users to prompt powerful AI agents that have direct access to the local file system and shell.
+- **Default AI Chat:** For setup users, any message sent without a prefix is automatically handled by Gemini as a read-only prompt, providing a seamless chat experience.
 - **Project Isolation:** It manages individual user "workspaces," ensuring that AI actions (like file reading or code generation) are confined to specific, user-defined project directories.
 - **Safety Modes:** It implements two levels of Gemini interaction:
-    - **Read-Only (Plan Mode):** The AI can analyze but not modify.
-    - **Full Access (YOLO Mode):** The AI can autonomously edit files and run commands.
+    - **Read-Only (Plan Mode):** The AI can analyze but not modify. (Default for plain messages).
+    - **Full Access (YOLO Mode):** The AI can autonomously edit files and run commands. (Triggered by `!gf`).
 - **Persistent Memory:** It uses session management to ensure the AI remembers context across multiple messages within a specific Discord user session.
 
 ---

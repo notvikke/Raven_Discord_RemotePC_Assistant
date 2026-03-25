@@ -3,9 +3,10 @@
 This bot provides a bridge between Discord and high-performance AI command-line interfaces (CLIs), specifically **Gemini CLI** (v0.35.0) and **Claude Code**.
 
 ## Features
-- `!g <prompt>`: Interact with Gemini in non-interactive mode.
-- `!gf <prompt>`: Full tool-use mode (YOLO).
+- **Default AI Chat**: Just type anything! Gemini handles any message that doesn't start with a prefix as a read-only prompt.
+- `!gf <prompt>`: Full Gemini access (YOLO mode - can edit files/run commands).
 - `!c <prompt>`: Interact with Claude Code CLI.
+- `!g <prompt>`: Explicit Gemini prompt (Backward compatible).
 ## Setup
 1. Clone this repository.
 2. Rename `.env.example` to `.env` and fill in your credentials.
