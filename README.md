@@ -1,7 +1,7 @@
 # Raven - Discord Remote PC Assistant
 
 <p align="center">
-  <img src="assets/raven.jpg" width="300" alt="Ravenn Assistant">
+  <img src="assets/raven.jpg" width="800" alt="Ravenn Assistant">
 </p>
 
 This bot provides a bridge between Discord and high-performance AI command-line interfaces (CLIs), specifically **Gemini CLI** (v0.35.0) and **Claude Code**.
