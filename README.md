@@ -1,5 +1,9 @@
 # Raven - Discord Remote PC Assistant
 
+<p align="center">
+  <img src="assets/f7e09f6037ec1388214ba6df6a865f92.jpg" width="300" alt="Ravenn Assistant">
+</p>
+
 This bot provides a bridge between Discord and high-performance AI command-line interfaces (CLIs), specifically **Gemini CLI** (v0.35.0) and **Claude Code**.
 
 ## Features
@@ -7,6 +11,10 @@ This bot provides a bridge between Discord and high-performance AI command-line 
 - `!gf <prompt>`: Full Gemini access (YOLO mode - can edit files/run commands).
 - `!c <prompt>`: Interact with Claude Code CLI.
 - `!g <prompt>`: Explicit Gemini prompt (Backward compatible).
+
+<p align="center">
+  <img src="assets/Screenshot 2026-03-25 222010.jpg" width="800" alt="Feature Overview">
+</p>
 ## 💡 Why Raven?
 Raven is not just another chatbot. It is a **Remote PC Assistant** that gives you the power of elite AI agents directly on your local machine via Discord.
 
@@ -57,8 +65,16 @@ Used for the `!c` command for specialized coding tasks.
    python discord_bot.py
    ```
 
+<p align="center">
+  <img src="assets/Screenshot 2026-03-25 221825.jpg" width="800" alt="Setup Process">
+</p>
+
 ## 🎵 Music Integration (Spotify)
 Ravenn includes a built-in Spotify controller. You can control your music via natural language (!gf) or direct commands.
+
+<p align="center">
+  <img src="assets/Screenshot 2026-03-25 222034.jpg" width="600" alt="Music and Help Commands">
+</p>
 
 ### Setup
 1. Create an app on the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
@@ -72,6 +88,13 @@ Ravenn includes a built-in Spotify controller. You can control your music via na
 - `!skip`: Skip to the next track.
 - `!nowplaying`: Show current track details.
 - `!gf play some lofi`: Use Gemini to search and play music for you.
+
+## 🚀 Capabilities & Examples
+Raven can handle complex, multi-step tasks autonomously. Here are some examples of what it can do:
+
+<p align="center">
+  <img src="assets/Screenshot 2026-03-25 222106.jpg" width="800" alt="Example Commands">
+</p>
 
 ## 🚀 Running on Startup (Windows)
 ...
