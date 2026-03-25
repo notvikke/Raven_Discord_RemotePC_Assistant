@@ -102,15 +102,8 @@ async def run_gemini_native(ctx, prompt, yolo=False):
     session_name = f"user_{user_id}"
 
     # Build the command arguments list
-    music_prompt = (
-        "You have access to a Spotify music control tool via 'python spotify_control.py <command> [query]'. "
-        "Commands: play (query), pause, skip, previous, status. "
-        "Example: 'python spotify_control.py play Shape of You'. "
-        "Use this tool whenever the user asks for music-related actions."
-    )
-    
     args = [
-        GEMINI_PATH, "-p", f"{music_prompt}\n\nUser request: {prompt}",
+        GEMINI_PATH, "-p", prompt,
         "--output-format", "stream-json"
     ]
     
@@ -120,6 +113,7 @@ async def run_gemini_native(ctx, prompt, yolo=False):
     if yolo:
         args.extend(["--approval-mode", "yolo"])
     else:
+        # Default to plan mode for safe messages, but still allow tool suggestions
         args.extend(["--approval-mode", "plan"])
 
     # Safely join arguments for Windows shell execution
@@ -137,7 +131,7 @@ async def run_gemini_native(ctx, prompt, yolo=False):
     full_response = ""
     header_info = ""
     status_msg = None
-    debug_log = ""
+    last_tool = None
 
     try:
         async for line in process.stdout:
@@ -153,17 +147,14 @@ async def run_gemini_native(ctx, prompt, yolo=False):
                     elif event.get('type') == 'message' and event.get('role') == 'assistant':
                         full_response += event.get('content', '')
                     elif event.get('type') == 'tool_use':
-                        tool_name = event.get('tool_name', 'unknown')
-                        msg_text = f"🛠️ *Gemini is using tool: `{tool_name}`...*"
+                        last_tool = event.get('tool_name', 'unknown')
+                        msg_text = f"🛠️ *Gemini is using tool: `{last_tool}`...*"
                         if not status_msg:
                             status_msg = await ctx.send(msg_text)
                         else:
                             await status_msg.edit(content=msg_text)
-                else:
-                    if not line_text.startswith('Loaded'):
-                        debug_log += line_text + "\n"
+                # Ignore non-json lines for the final response
             except json.JSONDecodeError:
-                debug_log += line.decode(errors='replace')
                 continue
 
         stderr_output = (await process.stderr.read()).decode(errors='replace').strip()
@@ -175,19 +166,19 @@ async def run_gemini_native(ctx, prompt, yolo=False):
 
         full_response = clean_ansi(full_response).strip()
         
-        # Filter out common non-error stderr messages
+        # Filter non-error logs
         filtered_stderr = "\n".join([
-            line for line in stderr_output.splitlines() 
-            if "Loaded cached credentials" not in line and "Reading config" not in line
+            l for l in stderr_output.splitlines() 
+            if "Loaded cached credentials" not in l and "Reading config" not in l and "Checking for updates" not in l
         ]).strip()
 
         if not full_response:
-            if filtered_stderr:
+            if last_tool:
+                final_output = f"{header_info}\n✅ Action completed using tool: `{last_tool}`" if header_info else f"✅ Action completed using tool: `{last_tool}`"
+            elif filtered_stderr:
                 final_output = f"❌ **CLI Error:**\n```\n{filtered_stderr}\n```"
-            elif debug_log:
-                final_output = f"⚠️ **No content, showing debug logs:**\n```\n{debug_log[:1500]}\n```"
             else:
-                final_output = "❌ Gemini returned no response content. This could mean the prompt didn't trigger an assistant message."
+                final_output = f"{header_info}\n✅ Done." if header_info else "✅ Done."
         else:
             final_output = f"{header_info}\n{full_response}" if header_info else full_response
 
@@ -261,8 +252,8 @@ async def help_command(ctx):
     embed = discord.Embed(
         title="Ravenn Bot Help",
         description=(
-            "Ravenn is a bridge between Discord and high-performance AI command-line interfaces (CLIs), "
-            "it allows you to manage local files, write code, and run shell commands directly from Discord."
+            "Ravenn is your remote engineering assistant. It connects Discord to high-performance AI agents "
+            "on your PC, allowing you to manage files, write code, and control music."
         ),
         color=discord.Color.blue()
     )
@@ -276,10 +267,21 @@ async def help_command(ctx):
     embed.add_field(
         name="🤖 AI Commands",
         value=(
-            "**Just type a message**: Gemini handles plain text as a read-only prompt.\n"
-            "`!gf [prompt]`: Full Gemini access (YOLO mode - can edit files/run commands).\n"
+            "**Just type a message**: Gemini handles plain text (Safe/Read-only).\n"
+            "`!gf [prompt]`: Full Gemini access (YOLO/Agentic mode - can edit files/run commands).\n"
             "`!c [prompt]`: Interact with Claude Code CLI.\n"
-            "`!upload`: Send one or more files with this command to save them to your project."
+            "`!upload`: Send one or more files to save them to your project."
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+        name="🎵 Music Control (Spotify)",
+        value=(
+            "`!play [query]`: Search and play a song, artist, or album.\n"
+            "`!pause`: Pause current playback.\n"
+            "`!skip`: Skip to the next track.\n"
+            "`!nowplaying`: Show details of the current song."
         ),
         inline=False
     )
@@ -287,13 +289,13 @@ async def help_command(ctx):
     embed.add_field(
         name="⚙️ Configuration",
         value=(
-            "`!setdirs [paths]`: Update the additional directories Gemini can access.\n"
-            "`!status`: View your current profile and project configuration."
+            "`!setdirs [paths]`: Add extra folders Gemini can access.\n"
+            "`!status`: View your current profile and session details."
         ),
         inline=False
     )
     
-    embed.set_footer(text="Tip: Use !gf only when you want the AI to make actual changes to your files.")
+    embed.set_footer(text="Tip: Use !gf for agentic tasks like 'build me a website' or 'fix my bugs'.")
     await ctx.send(embed=embed)
 
 @bot.command(name='status')
