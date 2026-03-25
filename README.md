@@ -58,7 +58,20 @@ Used for the `!c` command for specialized coding tasks.
    ```
 
 ## 🎵 Music Integration (Spotify)
-> **⚠️ In Development:** Spotify music control features are currently being implemented and tested. This section will be updated with full setup instructions once the feature is stable.
+Ravenn includes a built-in Spotify controller. You can control your music via natural language (!gf) or direct commands.
+
+### Setup
+1. Create an app on the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+2. Add `http://127.0.0.1:8888/callback` to your **Redirect URIs** in the app settings.
+3. Add your `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` to the `.env` file.
+4. Run any music command once in your terminal (e.g., `python spotify_control.py status`) to complete the one-time OAuth handshake.
+
+### Commands
+- `!play [query]`: Search and play a track, artist, or album.
+- `!pause`: Pause current playback.
+- `!skip`: Skip to the next track.
+- `!nowplaying`: Show current track details.
+- `!gf play some lofi`: Use Gemini to search and play music for you.
 
 ## 🚀 Running on Startup (Windows)
 ...

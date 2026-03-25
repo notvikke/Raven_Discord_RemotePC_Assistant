@@ -102,16 +102,21 @@ async def run_gemini_native(ctx, prompt, yolo=False):
     session_name = f"user_{user_id}"
 
     # Build the command arguments list
+    music_prompt = (
+        "You have access to a Spotify music control tool via 'python spotify_control.py <command> [query]'. "
+        "Commands: play (query), pause, skip, previous, status. "
+        "Example: 'python spotify_control.py play Shape of You'. "
+        "Use this tool whenever the user asks for music-related actions."
+    )
+    
     args = [
-        GEMINI_PATH, "-p", prompt,
+        GEMINI_PATH, "-p", f"{music_prompt}\n\nUser request: {prompt}",
         "--output-format", "stream-json"
     ]
     
     if include_dirs:
         args.extend(["--include-directories", include_dirs])
         
-    args.extend(["--allowed-mcp-server-names", "spotify-music"])
-
     if yolo:
         args.extend(["--approval-mode", "yolo"])
     else:
@@ -170,13 +175,19 @@ async def run_gemini_native(ctx, prompt, yolo=False):
 
         full_response = clean_ansi(full_response).strip()
         
+        # Filter out common non-error stderr messages
+        filtered_stderr = "\n".join([
+            line for line in stderr_output.splitlines() 
+            if "Loaded cached credentials" not in line and "Reading config" not in line
+        ]).strip()
+
         if not full_response:
-            if stderr_output:
-                final_output = f"❌ **CLI Error:**\n```\n{stderr_output}\n```"
+            if filtered_stderr:
+                final_output = f"❌ **CLI Error:**\n```\n{filtered_stderr}\n```"
             elif debug_log:
-                final_output = f"⚠️ **Debug Log (No response content):**\n```\n{debug_log[:1500]}\n```"
+                final_output = f"⚠️ **No content, showing debug logs:**\n```\n{debug_log[:1500]}\n```"
             else:
-                final_output = "❌ Gemini returned no response content."
+                final_output = "❌ Gemini returned no response content. This could mean the prompt didn't trigger an assistant message."
         else:
             final_output = f"{header_info}\n{full_response}" if header_info else full_response
 
@@ -190,6 +201,59 @@ async def run_gemini_native(ctx, prompt, yolo=False):
                 await ctx.send(f"```\n{final_output}\n```")
     except Exception as e:
         await ctx.send(f"Error running Gemini CLI: {e}")
+
+# --- Direct Spotify Commands ---
+@bot.command(name='play')
+@is_allowed()
+async def play_command(ctx, *, query=None):
+    """Directly play music on Spotify."""
+    cmd = ["python", "spotify_control.py", "play"]
+    if query: cmd.append(query)
+    
+    process = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    stdout, stderr = await process.communicate()
+    output = stdout.decode().strip() or stderr.decode().strip()
+    await ctx.send(f"🎵 {output}" if output else "🎵 Command executed.")
+
+@bot.command(name='pause')
+@is_allowed()
+async def pause_command(ctx):
+    """Pause Spotify playback."""
+    process = await asyncio.create_subprocess_exec(
+        "python", "spotify_control.py", "pause",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    stdout, _ = await process.communicate()
+    await ctx.send(f"⏸️ {stdout.decode().strip()}")
+
+@bot.command(name='skip')
+@is_allowed()
+async def skip_command(ctx):
+    """Skip to the next track."""
+    process = await asyncio.create_subprocess_exec(
+        "python", "spotify_control.py", "skip",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    stdout, _ = await process.communicate()
+    await ctx.send(f"⏭️ {stdout.decode().strip()}")
+
+@bot.command(name='nowplaying')
+@is_allowed()
+async def nowplaying_command(ctx):
+    """Show what's currently playing."""
+    process = await asyncio.create_subprocess_exec(
+        "python", "spotify_control.py", "status",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    stdout, _ = await process.communicate()
+    await ctx.send(f"🎶 {stdout.decode().strip()}")
 
 @bot.command(name='help')
 async def help_command(ctx):
