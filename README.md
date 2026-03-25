@@ -7,6 +7,23 @@ This bot provides a bridge between Discord and high-performance AI command-line 
 - `!gf <prompt>`: Full Gemini access (YOLO mode - can edit files/run commands).
 - `!c <prompt>`: Interact with Claude Code CLI.
 - `!g <prompt>`: Explicit Gemini prompt (Backward compatible).
+## 🛠️ Prerequisites
+Before running the bot, you **must** have the following CLI agents installed and authenticated on your machine:
+
+### 1. Gemini CLI
+The core engine for the default chat and file management.
+- **Install**: `npm install -g @google/gemini-cli`
+- **Authenticate**: Run `gemini` in your terminal and follow the login prompts.
+- **Documentation**: [Gemini CLI GitHub](https://github.com/google/gemini-cli)
+
+### 2. Claude Code
+Used for the `!c` command for specialized coding tasks.
+- **Install**: `npm install -g @anthropic-ai/claude-code`
+- **Authenticate**: Run `claude` in your terminal to complete the one-time setup.
+- **Documentation**: [Claude Code Guide](https://docs.anthropic.com/claude/docs/claude-code)
+
+---
+
 ## Setup
 1. Clone this repository.
 2. Rename `.env.example` to `.env` and fill in your credentials.
