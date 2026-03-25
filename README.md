@@ -34,6 +34,25 @@ Raven is not just another chatbot. It is a **Remote PC Assistant** that gives yo
 - **Documentation**: *"Read all the `.py` files in this directory and generate a comprehensive `PROJECT_REPORT.md`."*
 - **Remote Troubleshooting**: Fix issues on your home PC while away, using only your phone and Discord.
 
+## 🔒 Private Bot Setup
+Raven is designed to be a **private, local-first** assistant. Since it has full access to your file system and terminal, you should **never** let unauthorized users interact with it.
+
+### 1. Create Your Discord Bot
+1. Go to the [Discord Developer Portal](https://discord.com/developers/applications).
+2. Click **New Application** and give it a name.
+3. Under the **Bot** tab:
+   - Enable **Message Content Intent** (Required).
+   - Reset and copy your **Bot Token**.
+4. Under the **OAuth2** tab:
+   - Use the **URL Generator**.
+   - Select `bot` scope and `Administrator` permissions (or specific permissions for message reading/sending).
+   - Copy the generated URL and open it in your browser to invite the bot to your private server.
+
+### 2. Secure the Bot
+To ensure only you can control the bot, add your Discord User ID to the `.env` file:
+- `ALLOWED_USER_ID=your_18_digit_id`
+- `FULL_ACCESS=True` (Set to `False` if you want to restrict YOLO commands).
+
 ---
 
 ## 🛠️ Prerequisites
