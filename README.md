@@ -7,6 +7,27 @@ This bot provides a bridge between Discord and high-performance AI command-line 
 - `!gf <prompt>`: Full Gemini access (YOLO mode - can edit files/run commands).
 - `!c <prompt>`: Interact with Claude Code CLI.
 - `!g <prompt>`: Explicit Gemini prompt (Backward compatible).
+## 💡 Why Raven?
+Raven is not just another chatbot. It is a **Remote PC Assistant** that gives you the power of elite AI agents directly on your local machine via Discord.
+
+- **Direct File System Access**: Raven can read your code, write new files, and reorganize your project structure.
+- **Command-Line Mastery**: It can install dependencies, run scripts, and execute shell commands autonomously.
+- **Context-Aware Memory**: Using persistent CLI sessions, the AI remembers your project goals and previous actions.
+- **Privacy & Security**: Each user works in their own isolated "Home" directory with built-in path sandboxing.
+- **Dual-Action Modes**:
+    - **Safe (Read-only)**: Default mode for analyzing code and answering questions without making changes.
+    - **Powerful (YOLO)**: Full permission mode (`!gf`) to let the AI build and fix things for you.
+
+## 🚀 Real-World Use Cases
+- **Autonomous Coding**: *"Build a REST API using FastAPI and save it to `main.py`."*
+- **Instant Debugging**: *"Read the error in my `app.log` and fix the bug in `utils.py`."*
+- **System Automation**: *"Find all screenshots in my Downloads folder from today and move them to a `Project_Screenshots` folder."*
+- **Environment Setup**: *"Initialize a new Node.js project, install `express` and `dotenv`, and create a basic `index.js`."*
+- **Documentation**: *"Read all the `.py` files in this directory and generate a comprehensive `PROJECT_REPORT.md`."*
+- **Remote Troubleshooting**: Fix issues on your home PC while away, using only your phone and Discord.
+
+---
+
 ## 🛠️ Prerequisites
 Before running the bot, you **must** have the following CLI agents installed and authenticated on your machine:
 
