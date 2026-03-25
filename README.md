@@ -65,6 +65,12 @@ Used for the `!c` command for specialized coding tasks.
    python discord_bot.py
    ```
 
+## 🏁 First-Time User Setup
+Once the bot is running, you must initialize your environment in Discord:
+1. Type **`!setup`** in any channel the bot can see.
+2. Follow the interactive wizard to set your **Nickname** and **Project Path** (CWD).
+3. (Optional) Provide additional directories you want Gemini to have access to.
+
 <p align="center">
   <img src="assets/Screenshot 2026-03-25 221825.jpg" width="800" alt="Setup Process">
 </p>
