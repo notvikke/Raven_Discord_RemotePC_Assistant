@@ -11,6 +11,9 @@ This bot provides a bridge between Discord and high-performance AI command-line 
 - `!gf <prompt>`: Full Gemini access (YOLO mode - can edit files/run commands).
 - `!c <prompt>`: Interact with Claude Code CLI.
 - `!g <prompt>`: Explicit Gemini prompt (Backward compatible).
+- **Owner-Only Enforcement**: If `ALLOWED_USER_ID` is set, only that user can run AI commands, uploads, setup, and plain-message Gemini prompts.
+- **Guided Onboarding**: `!setup` now supports `skip`, `cancel`, and retry-friendly validation prompts.
+- **Context-Aware Help**: `!help` adapts to your state (first-time, configured, or restricted user) and suggests next actions.
 
 <p align="center">
   <img src="assets/Screenshot 2026-03-25 222010.jpg" width="800" alt="Feature Overview">
@@ -52,6 +55,11 @@ Raven is designed to be a **private, local-first** assistant. Since it has full 
 To ensure only you can control the bot, add your Discord User ID to the `.env` file:
 - `ALLOWED_USER_ID=your_18_digit_id`
 - `FULL_ACCESS=True` (Set to `False` if you want to restrict YOLO commands).
+- `GEMINI_PATH=` (Optional override for Gemini executable path)
+- `CLAUDE_PATH=` (Optional override for Claude executable or `cli.js` path)
+
+When `FULL_ACCESS=True`, Ravenn keeps broad full-access behavior for Claude (`C:\` and `D:\`).
+Use this mode only on a private, trusted server.
 
 ---
 
@@ -75,6 +83,9 @@ Used for the `!c` command for specialized coding tasks.
 ## Setup
 1. Clone this repository.
 2. Rename `.env.example` to `.env` and fill in your credentials.
+   - Optional path overrides:
+     - `GEMINI_PATH=C:\path\to\gemini.cmd`
+     - `CLAUDE_PATH=C:\path\to\claude.cmd` (or to `...\claude-code\cli.js`)
 3. Install dependencies:
    ```bash
    pip install -r requirements.txt
@@ -89,6 +100,10 @@ Once the bot is running, you must initialize your environment in Discord:
 1. Type **`!setup`** in any channel the bot can see.
 2. Follow the interactive wizard to set your **Nickname** and **Project Path** (CWD).
 3. (Optional) Provide additional directories you want Gemini to have access to.
+4. During setup:
+   - Type `skip` to keep an existing value.
+   - Type `cancel` to exit without changing config.
+5. Run `!status` to verify your active workspace.
 
 <p align="center">
   <img src="assets/Screenshot 2026-03-25 221825.jpg" width="800" alt="Setup Process">
@@ -144,4 +159,5 @@ To have the bot start automatically when you log into your PC, you can use one o
 ## Dependencies
 - `discord.py`
 - `python-dotenv`
+- `spotipy`
 - Gemini CLI and Claude CLI must be installed and in your PATH.
